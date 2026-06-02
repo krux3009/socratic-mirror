@@ -1,0 +1,103 @@
+---
+name: parable-feynman-tutor
+description: 学习、搞懂、记住任意概念时，生成一个可交互的 HTML 学习页（而不是直接把答案讲掉）：先用寓言间接讲懂、结尾才点破，再用费曼法逼学习者自己讲一遍、找漏洞、打比方、做主动回忆——标准答案在写下自己的解释前一直锁着。Generates an interactive HTML study page (not a plain inline answer) that teaches a concept encode-first via a parable, then runs the learner through the Feynman technique with model answers locked until they attempt their own. 触发 / Use whenever the user wants to LEARN, UNDERSTAND, MASTER, RETAIN or REVISE a concept in any subject (CS, econ, math, science, law…) — e.g. "教我X / 帮我学懂(搞懂)X / 我想真正弄懂X / X老记不住 / X一看就会一做就废 / 用寓言讲讲X / 给我做个费曼(学习)页 / 学习工具", or /learn /feynman /parable /费曼 /学习 /讲解 + a concept. PREFER this skill over explaining inline whenever the goal is to actually study and remember — trigger even if the user never says "Feynman" or "parable", and even when it sounds like "just explain X". Skip only for quick fact lookups, code debugging, summarizing a document, translation, or study-schedule planning.
+license: MIT
+---
+
+# 寓言 + 费曼学习工具 (parable-feynman-tutor)
+
+把一个概念变成一份**可交互的 HTML 学习页**，学习者打开后一步步学透、并且记得住。
+
+## 核心理念：先输出，再揭晓（produce before reveal）
+
+学习有两半：
+
+- **输入 / 编码** —— 寓言。AI 讲一个故事，把概念的机制间接演出来，**结尾才点破**这是什么。故事让抽象的东西变得鲜活、好记（Amanda Askell 的"寓言提示词"）。
+- **输出 / 提取** —— 费曼。**学习者自己**把概念讲回来，讲的过程暴露出哪里没真懂。
+
+最大的坑：一个只做"输入"的 AI 学习工具（AI 讲、你点头）＝ 纯粹的**能力错觉**（illusion of competence）——看着眼熟就以为懂了。
+
+所以本工具产出的 HTML 是一个**带锁的工作台**：标准答案在学习者**先写下自己的解释之前一直锁着**。这一条原则——先输出再揭晓——是写进代码里的（reveal-gate），不是靠自觉。理论依据见 `references/feynman-method.md`。
+
+---
+
+## 一、触发方式
+
+### 斜杠命令
+- `/learn <概念>` · `/feynman <概念>` · `/parable <概念>` — 直接开始
+- `/feynman <概念> undergrad|grad|research` — 指定难度
+- 中文别名：`/学习 <概念>` · `/费曼 <概念>` · `/讲解 <概念>`
+
+### 自然语言触发
+**中文：** 教我 X · 帮我学懂 X · 我想真正搞懂 X · 用寓言给我讲讲 X · 给我做个费曼学习页 · 这个概念我一看就会一做就废 · 我老记不住 X
+**English：** teach me X · help me really understand X · make me a Feynman page for X · explain X with a parable
+
+### 软提示
+用户在反复纠结某个概念但没触发本技能时，可单行建议：
+> 要不要用 `/learn <这个概念>`？我给你做一个交互式学习页：先用寓言讲懂，再逼你自己讲一遍找漏洞，最后做主动回忆。
+
+**不得未经用户指令自动进入学习流程。**
+
+---
+
+## 二、运行时工作流（生成一份学习页 = 按顺序走完这 7 步）
+
+### Step 0 · 收集三个槽位
+- `concept`（必填）—— 要学的东西。
+- `domain`（领域，如 经济学 / 分布式系统 / 有机化学）—— 决定寓言的取材；**在寓言里最后才点出**。
+- `difficulty` ∈ {undergrad, grad, research}，默认 `grad`（Askell 的默认）。
+
+### Step 1 · ≤2 问澄清门（关键行为）
+判断：凭用户已给的信息 + 合理推断，你能不能写出一个**正确、不瞎编**的寓言和费曼脚手架？
+- 能 → 直接做。
+- 不能 → **最多问 2 个**最高杠杆的问题，然后就做。优先级：① 概念太宽时，逼出一个**窄切片**（费曼第一大坑"题目太大→讲得空泛"，见 `references/concept-prep.md`）；② 难度会实质改变讲法时。
+- **绝不为了凑满 2 个问题而硬问。绝不编造技术事实**——真不确定的，在内容里标成"⚠ 存疑假设"，不要假装确定。
+
+### Step 2 · 载入知识库
+读完这些参考文件，**不要凭记忆现编**费曼/寓言的规则：
+- `references/feynman-method.md` —— 费曼四步、为什么有效、三大坑 → 设计规则
+- `references/parable-method.md` —— 寓言提示词、领域最后点破、难度旋钮、好寓言的标准
+- `references/concept-prep.md` —— 怎么切窄、怎么写"针对该概念的"漏洞清单/卡片/教学挑战
+- `references/anti-ai-slop.md` —— 寓言与解释的反 AI 味黑名单 + 不瞎编/占位符政策
+- `references/html-data-contract.md` —— 要填的 JSON 结构 + 每个字段对应 HTML 哪个阶段
+
+### Step 3 · 写「编码」内容（依据 parable-method + anti-ai-slop）
+- `parable` —— 一个把概念**机制**间接演出来的故事；领域/术语**直到最后一拍才出现**；语气随难度旋钮调。
+- `term` —— 概念的**正式名称**，明确写出（Askell 提示：点名有助记忆）。
+- `plainExplanation` —— 故事结束后的大白话解释，**把每个故事元素映射回真实机制**。
+
+### Step 4 · 写「提取 + 诊断」脚手架（依据 feynman-method + concept-prep）
+全部作为**锁住的标准答案**生成（学习者先写，才解锁）：
+- `modelSimpleExplanation` —— "讲给 12 岁小孩听、零术语"的范例解释。
+- `gapChecklist` —— **4–7 条针对该概念的**易错点（学习者最容易卡壳/含糊/用术语糊弄的地方）；每条只写 `id`+`prompt`，solid/shaky/can't-yet 由学习者在页面上点选（不要写进 JSON）。**不要写通用废话**（如"你讲清楚了吗"）。
+- `modelAnalogy` —— 一个强比方（真正理解的压缩），学习者写完自己的才解锁。
+- `flashcards` —— 5–8 张 Q/A，考**承重的关系**而非能眼熟的定义。
+- `teachBackPrompt` —— 最后的挑战：一个需要**迁移**概念去解释的新场景（不是复述）。
+
+### Step 5 · 组装 JSON
+按 `references/html-data-contract.md` 的 schema 组装数据对象。把概念转成 slug（如 `comparative-advantage`），用作文件名 + localStorage key。
+
+### Step 6 · 注入并写出文件
+读 `assets/tutor-template.html`，把其中**唯一的注入点** `/*__TUTOR_DATA__*/ null` 替换成你的 JSON，写到 `./<slug>.html`（用户当前目录，不要写死任何绝对路径）。告诉用户文件路径、让他用浏览器打开。
+
+### Step 7 · 交接（诚实收尾）
+一句话说清：文件在哪、最值得花力气的是哪一阶段（通常是 Gap-hunt 漏洞猎杀）、提醒他答案在他动手写之前一直锁着（这工具就是设计来逼他先输出的）。
+**绝不在聊天里直接贴出标准答案**——那会废掉整个 reveal-gate 机制，本工具的价值就没了。
+
+---
+
+## 三、输出语言
+寓言、解释、卡片等**生成内容跟随用户提供概念的语言**：概念是中文 → 整页中文；概念是英文 → 整页英文。HTML 模板的 UI 文案双语兼容。
+
+## 四、常见误区（违反任一条即失败）
+- ❌ 寓言里**太早点破**领域/术语（必须最后一拍才揭晓）
+- ❌ 概念切片**太宽**没收窄（→ 讲得空泛）
+- ❌ 漏洞清单写成**通用废话**，不是针对该概念
+- ❌ 把**标准答案贴进聊天**（废掉 reveal-gate）
+- ❌ 寓言结尾落在**人生道理**上，而不是落在概念揭晓上
+- ❌ **瞎编事实**来填解释（不确定就标存疑）
+
+## 五、引用文件清单
+生成内容**必须参考**以下文件，不要凭记忆编：
+- `references/feynman-method.md` · `references/parable-method.md` · `references/concept-prep.md` · `references/anti-ai-slop.md` · `references/html-data-contract.md`
+- 模板：`assets/tutor-template.html`（交互页）· `assets/grading-prompts.md`（"复制评分提示词"的文本源）

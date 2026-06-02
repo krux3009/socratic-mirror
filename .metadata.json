@@ -1,0 +1,26 @@
+{
+  "assetType": "skill",
+  "name": "parable-feynman-tutor",
+  "displayName": "寓言+费曼学习工具",
+  "description": "把任意概念变成一个可交互的 HTML 学习工具：先用寓言间接讲懂一个概念（结尾才点破是什么），再用费曼技巧逼你自己讲一遍、找漏洞、打比方、做主动回忆。所有标准答案在你写下自己的解释之前一直锁着——逼你输出，而不是点头。离线可用，无需 API key。",
+  "semver": "1.0.0",
+  "category": "education",
+  "tags": [
+    "费曼",
+    "费曼学习法",
+    "寓言",
+    "学习工具",
+    "主动回忆",
+    "深度学习",
+    "feynman",
+    "parable",
+    "study-tool",
+    "active-recall",
+    "interactive-html",
+    "learning"
+  ],
+  "author": "LiXuan@StepFun",
+  "license": "MIT",
+  "homepage": "",
+  "repository": ""
+}
