@@ -36,9 +36,12 @@
   .kicker{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); font-weight:700}
   h1.concept{font-size:30px; line-height:1.25; margin:6px 0 2px; font-weight:700}
   .sub{color:var(--muted); font-size:14px}
+  /* a11y: visible focus ring for keyboard users only */
+  :focus-visible{outline:2.5px solid var(--accent); outline-offset:3px; border-radius:7px}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
   /* stepper */
   .stepper{display:flex; gap:6px; margin:22px 0 8px; flex-wrap:wrap}
-  .step{flex:1 1 0; min-width:84px; text-align:center; cursor:pointer; user-select:none}
+  .step{flex:1 1 0; min-width:74px; text-align:center; cursor:pointer; user-select:none; background:none; border:0; padding:0; font:inherit}
   .step .bar{height:5px; border-radius:999px; background:var(--line); transition:background .25s}
   .step.done .bar{background:var(--accent-soft)}
   .step.active .bar{background:var(--accent)}
@@ -51,9 +54,15 @@
   .stage.active{display:block}
   @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
   .stage h2{font-size:21px; margin:0 0 4px}
+  .stage h2:focus{outline:none}
   .stage .lead{color:var(--muted); font-size:14.5px; margin:0 0 18px}
   .prose p{margin:0 0 16px}
   .prose p:last-child{margin-bottom:0}
+  /* two parables */
+  .parable{margin:0 0 4px}
+  .story-label{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); font-weight:700; margin:22px 0 8px}
+  .parable:first-of-type .story-label{margin-top:4px}
+  .story-sep{text-align:center; color:var(--faint); letter-spacing:.5em; margin:24px 0 4px; user-select:none}
   .term{display:inline-block; font-size:26px; font-weight:700; color:var(--accent-ink); border-bottom:3px solid var(--accent-soft); padding-bottom:2px; margin:2px 0 14px}
   textarea{
     width:100%; min-height:130px; resize:vertical; padding:14px 15px; font:inherit; line-height:1.7;
@@ -70,6 +79,8 @@
   .btn-ghost:hover{border-color:var(--accent)}
   button:disabled{opacity:.45; cursor:not-allowed; filter:none}
   .nav{display:flex; justify-content:space-between; margin-top:24px; padding-top:18px; border-top:1px solid var(--line2)}
+  .kbd-hint{font-size:12px; color:var(--faint); text-align:center; margin-top:10px}
+  .kbd-hint kbd{font:inherit; font-size:11px; background:var(--line2); border:1px solid var(--line); border-radius:5px; padding:1px 6px; color:var(--muted)}
   /* locked model answer */
   .model{margin-top:16px; border:1px dashed var(--line); border-radius:12px; padding:16px; background:var(--line2)}
   .model .lock{color:var(--faint); font-size:13.5px; display:flex; align-items:center; gap:8px}
@@ -83,9 +94,9 @@
   .gap .q{font-weight:500; margin-bottom:10px}
   .marks{display:flex; gap:8px; flex-wrap:wrap}
   .mark{font-size:13.5px; padding:6px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer}
-  .mark[data-v=solid].on{border-color:var(--good); color:var(--good); background:rgba(91,140,90,.10)}
-  .mark[data-v=shaky].on{border-color:var(--shaky); color:var(--shaky); background:rgba(199,154,62,.12)}
-  .mark[data-v=cant].on{border-color:var(--cant); color:var(--cant); background:rgba(191,91,74,.10)}
+  .mark[aria-pressed=true][data-v=solid]{border-color:var(--good); color:var(--good); background:rgba(91,140,90,.10)}
+  .mark[aria-pressed=true][data-v=shaky]{border-color:var(--shaky); color:var(--shaky); background:rgba(199,154,62,.12)}
+  .mark[aria-pressed=true][data-v=cant]{border-color:var(--cant); color:var(--cant); background:rgba(191,91,74,.10)}
   .redo{display:none; margin-top:11px}
   .redo.show{display:block}
   .redo textarea{min-height:70px}
@@ -112,11 +123,30 @@
   .notice{max-width:560px; margin:14vh auto; text-align:center; color:var(--muted); padding:24px}
   .notice code{background:var(--line2); padding:2px 7px; border-radius:6px; color:var(--accent-ink)}
   .progress-note{font-size:12.5px; color:var(--faint); text-align:center; margin-top:14px}
+  /* ===== print: a finished, self-archivable worked sheet =====
+     Cmd/Ctrl-P reveals every stage + every locked answer + every card back,
+     hides the interactive chrome. The reveal-gate is a learning discipline,
+     not DRM — once you're printing, you've done the work. */
+  @media print{
+    :root{--bg:#fff; --card:#fff; --ink:#000; --muted:#222; --faint:#555; --line:#bbb; --line2:#ddd; --accent-soft:#f2f2f2; --shadow:none}
+    body{font-size:11.5pt}
+    .wrap{padding:0; max-width:none}
+    .stepper, .nav, .row, .kbd-hint, #toast, .progress-note, .fc .fcbtns, .fcbar, .redo .cap{display:none !important}
+    .card{box-shadow:none; border:0; padding:0}
+    .stage{display:block !important; animation:none; page-break-inside:avoid; border-top:1px solid #ccc; padding-top:16px; margin-top:18px}
+    .stage:first-of-type{border-top:0; margin-top:0; padding-top:0}
+    .model{background:#fff !important; border:1px solid #ccc !important; border-style:solid !important}
+    .model .lock{display:none !important}
+    .model .body{display:block !important}
+    .redo{display:block !important}
+    .fc .a{display:block !important}
+    .fc{cursor:auto; break-inside:avoid}
+  }
 </style>
 </head>
 <body>
 <main id="app"></main>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
@@ -130,11 +160,16 @@ const TUTOR = /*__TUTOR_DATA__*/ null;
 /* ---- UI strings (bilingual) ---- */
 const STRINGS = {
   zh:{
-    kicker:"寓言 + 费曼学习法",
-    steps:["寓言","揭晓","讲一遍","找漏洞","打比方","回忆"],
-    s0t:"先听个故事",        s0l:"读完它。结尾才会点破这讲的是什么概念——别急着往下翻。",
-    s0btn:"我读完了 →",
-    s1t:"原来讲的是……",      s1l:"这就是刚才那个故事的内核。",
+    kicker:"双寓言 + 费曼学习法",
+    steps:["故事","猜共性","揭晓","讲一遍","找漏洞","打比方","回忆"],
+    storyLabel:(i,d)=>"故事"+["一","二","三","四","五"][i]+(d?" · "+d:""),
+    s0t:"先读两个故事",      s0l:"两个故事表面毫不相干，却藏着同一台『机器』。读完它们——结尾才点破是什么概念，别急着往下翻。",
+    s0sep:"∗ ∗ ∗",
+    s0btn:"两个都读完了 →",
+    sPt:"它们到底共享什么？",  sPl:"两个故事的皮完全不同，骨架却是同一台机器。先别翻——写下你的猜测：它们共用的是哪一个机制？（这一步逼你把表面细节剥掉、只抓结构。）",
+    sPph:"两个故事其实都在讲……因为……",
+    predictTag:"共享机制（写完再对照；这里先不点名，名字下一步才揭晓）",
+    s1t:"原来讲的是……",      s1l:"你猜的那台机器，正式名字是——",
     s2t:"现在你来讲",         s2l:"用大白话讲给一个12岁小孩听，不许用术语。讲不顺的地方，就是你还没真懂的地方。",
     s2ph:"假设对面是个聪明但完全没学过这个的小孩，你会怎么讲……",
     s3t:"找出你的漏洞",       s3l:"逐条自评。标成『还不行/不太稳』的，必须回去重讲一遍——漏洞不许标完就跑。",
@@ -154,15 +189,22 @@ const STRINGS = {
     challenge:"教学挑战",done:"完成学习",
     donemsg:"🎉 学完一轮。隔几天回来再翻一次卡，记得更牢。",
     note:"进度自动保存在本机浏览器，关掉再开还在。",
+    kbdhint:`提示：用 <kbd>←</kbd> <kbd>→</kbd> 在各阶段之间走；想存档就 <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> 打印成 PDF（会展开全部范例答案）。`,
     aHintLink:"试着明确写出『谁对应谁』。",aHintShort:"再展开一点——一句话还不够。",
+    pHintMech:"说出两个故事共享的『机制/关系』，而不只是同一个话题词。",
     wc:n=>`${n} 字`,
   },
   en:{
-    kicker:"Parable + Feynman",
-    steps:["Parable","Reveal","Explain","Gaps","Analogy","Recall"],
-    s0t:"First, a story",     s0l:"Read it. The concept is only named at the very end — don't skip ahead.",
-    s0btn:"I've read it →",
-    s1t:"It was about…",      s1l:"That story was this idea in disguise.",
+    kicker:"Two parables + Feynman",
+    steps:["Stories","Predict","Reveal","Explain","Gaps","Analogy","Recall"],
+    storyLabel:(i,d)=>"Story "+(i+1)+(d?" · "+d:""),
+    s0t:"First, two stories",  s0l:"Two stories that look unrelated hide the same machine. Read both — the concept is only named at the very end. Don't skip ahead.",
+    s0sep:"∗ ∗ ∗",
+    s0btn:"Read them both →",
+    sPt:"What do they secretly share?", sPl:"The two stories share no surface detail, but the same skeleton. Before you reveal it — write your guess: which one mechanism do they have in common? (This forces you to strip the surface and grab the structure.)",
+    sPph:"Both stories are really about… because…",
+    predictTag:"The shared mechanism (compare after you write; not named yet — the name comes next)",
+    s1t:"It was about…",       s1l:"That machine you guessed at has a name —",
     s2t:"Now you explain it", s2l:"Explain it to a smart 12-year-old, no jargon. Wherever you stall is where you don't really get it yet.",
     s2ph:"Imagine a clever kid who's never seen this. How would you put it…",
     s3t:"Hunt your gaps",     s3l:"Self-mark each one. Anything 'not yet / shaky' you must re-explain — no marking-and-running.",
@@ -182,7 +224,9 @@ const STRINGS = {
     challenge:"Teach-back challenge",done:"Finish",
     donemsg:"🎉 One pass done. Come back in a few days and flip the cards again to lock it in.",
     note:"Progress auto-saves in this browser; reopen anytime.",
+    kbdhint:`Tip: use <kbd>←</kbd> <kbd>→</kbd> to move between stages; <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> to print a PDF (all model answers expand).`,
     aHintLink:"Try naming what maps to what.",aHintShort:"Expand a bit more — one line isn't enough.",
+    pHintMech:"Name the mechanism/relationship the two stories share — not just a common topic.",
     wc:n=>`${n} words`,
   }
 };
@@ -200,14 +244,19 @@ const L = STRINGS[TUTOR.lang === 'en' ? 'en' : 'zh'];
 document.documentElement.lang = (TUTOR.lang==='en'?'en':'zh');
 document.title = TUTOR.concept + " · 学习页";
 const KEY = 'sm:' + TUTOR.slug;
-const STAGES = 6;
+const STAGES = 7;
+
+/* ---- normalize parables (accept new [{story,domain}] or legacy single string) ---- */
+const PARABLES = Array.isArray(TUTOR.encode.parables) && TUTOR.encode.parables.length
+  ? TUTOR.encode.parables
+  : (TUTOR.encode.parable ? [{story:TUTOR.encode.parable, domain:TUTOR.domain}] : []);
 
 /* ---- state + persistence ---- */
-const DEFAULT = {v:1, currentStage:0, explainText:"", gapMarks:{}, gapNotes:{},
+const DEFAULT = {v:2, currentStage:0, explainText:"", predictText:"", gapMarks:{}, gapNotes:{},
                  analogyText:"", teachBackText:"", cardMarks:{}, revealed:{}, done:false};
 let state = load();
 function load(){
-  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.v===1) return Object.assign({}, DEFAULT, s); }catch(e){}
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.v===2) return Object.assign({}, DEFAULT, s); }catch(e){}
   return Object.assign({}, DEFAULT);
 }
 
@@ -235,6 +284,25 @@ function checkAnalogy(text){
   if(!t) return "";
   const out = [];
   if(!/(像|如同|好比|类似|相当于|like |as if|similar|analog)/i.test(t)) out.push(L.aHintLink);
+  if(!canReveal(t)) out.push(L.aHintShort);
+  return out.join(" ");
+}
+
+// 💡 tweakable #5 — YOUR TURN (Predict stage nudge).
+//   A good cross-story prediction strips the surface and names the shared *structure*.
+//   This returns a one-line hint string shown under the Predict textarea (or "" for no hint).
+//   It must NOT grade — just nudge, like checkAnalogy above. The hard gate is still canReveal().
+//   Ideas to consider: did the learner engage BOTH stories (not just retell one)? Did they name a
+//   relationship/mechanism rather than a mere topic word? Is it still too short to be a real guess?
+//   See the request after this build — implement the body (≈5–10 lines).
+function checkPrediction(text){
+  // Sensible default — tweak freely. The hard length gate is canReveal(); this is just a live nudge.
+  // Goal: push toward the *shared structure*, not a topic word or a retell of one story.
+  const t = (text||"").trim();
+  if(!t) return "";
+  const out = [];
+  // nudge if no relational/causal/mechanism word surfaced (looks like a topic, not a relationship)
+  if(!/(因为|所以|取决于|导致|换|交换|放弃|代价|关系|机制|both|because|depends|trade|exchange|relationship|mechanism|share)/i.test(t)) out.push(L.pHintMech);
   if(!canReveal(t)) out.push(L.aHintShort);
   return out.join(" ");
 }
@@ -277,27 +345,42 @@ app.innerHTML = `
       <h1 class="concept">${esc(TUTOR.concept)}</h1>
       <div class="sub">${esc(TUTOR.domain||"")}${TUTOR.domain?" · ":""}${esc(TUTOR.difficulty||"")}</div>
     </div>
-    <div class="stepper" id="stepper">
-      ${L.steps.map((s,i)=>`<div class="step" data-i="${i}"><div class="bar"></div><div class="lbl">${esc(s)}</div></div>`).join("")}
+    <div class="stepper" id="stepper" role="tablist" aria-label="${esc(L.kicker)}">
+      ${L.steps.map((s,i)=>`<button class="step" type="button" role="tab" id="tab-${i}" aria-controls="panel-${i}" aria-selected="false" data-i="${i}"><span class="bar" aria-hidden="true"></span><span class="lbl">${esc(s)}</span></button>`).join("")}
     </div>
     <div class="card">
-      <!-- 0 parable -->
-      <section class="stage" data-stage="0">
-        <h2>${esc(L.s0t)}</h2><p class="lead">${esc(L.s0l)}</p>
-        <div class="prose">${paras(TUTOR.encode.parable)}</div>
+      <!-- 0 parables -->
+      <section class="stage" data-stage="0" role="tabpanel" id="panel-0" aria-labelledby="tab-0">
+        <h2 tabindex="-1">${esc(L.s0t)}</h2><p class="lead">${esc(L.s0l)}</p>
+        ${PARABLES.map((p,i)=>`<div class="parable"><div class="story-label">${esc(L.storyLabel(i, p.domain))}</div><div class="prose">${paras(p.story)}</div></div>`).join(`<div class="story-sep" aria-hidden="true">${esc(L.s0sep)}</div>`)}
         <div class="nav"><span></span><button class="btn-primary" data-next>${esc(L.s0btn)}</button></div>
       </section>
-      <!-- 1 reveal -->
-      <section class="stage" data-stage="1">
-        <h2>${esc(L.s1t)}</h2><p class="lead">${esc(L.s1l)}</p>
-        <div class="term">${esc(f && TUTOR.encode.term)}</div>
+      <!-- 1 predict (NEW) -->
+      <section class="stage" data-stage="1" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+        <h2 tabindex="-1">${esc(L.sPt)}</h2><p class="lead">${esc(L.sPl)}</p>
+        <textarea id="predict" placeholder="${esc(L.sPph)}" aria-label="${esc(L.sPt)}"></textarea>
+        <div class="meter" id="predictMeter"></div>
+        <div class="hint" id="predictHint" aria-live="polite"></div>
+        <div class="row">
+          <button class="btn-ghost" data-reveal="predict" data-src="predict">${esc(L.reveal)}</button>
+        </div>
+        <div class="model" id="model-predict">
+          <div class="lock">🔒 ${esc(L.locked)}</div>
+          <div class="body"><div class="tag">${esc(L.predictTag)}</div><div class="prose">${paras(TUTOR.encode.predictModel||"")}</div></div>
+        </div>
+        <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="predict">${esc(L.next)}</button></div>
+      </section>
+      <!-- 2 reveal -->
+      <section class="stage" data-stage="2" role="tabpanel" id="panel-2" aria-labelledby="tab-2">
+        <h2 tabindex="-1">${esc(L.s1t)}</h2><p class="lead">${esc(L.s1l)}</p>
+        <div class="term">${esc(TUTOR.encode.term)}</div>
         <div class="prose">${paras(TUTOR.encode.plainExplanation)}</div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next>${esc(L.next)}</button></div>
       </section>
-      <!-- 2 explain -->
-      <section class="stage" data-stage="2">
-        <h2>${esc(L.s2t)}</h2><p class="lead">${esc(L.s2l)}</p>
-        <textarea id="explain" placeholder="${esc(L.s2ph)}"></textarea>
+      <!-- 3 explain -->
+      <section class="stage" data-stage="3" role="tabpanel" id="panel-3" aria-labelledby="tab-3">
+        <h2 tabindex="-1">${esc(L.s2t)}</h2><p class="lead">${esc(L.s2l)}</p>
+        <textarea id="explain" placeholder="${esc(L.s2ph)}" aria-label="${esc(L.s2t)}"></textarea>
         <div class="meter" id="explainMeter"></div>
         <div class="row">
           <button class="btn-ghost" data-copy="simpleExplanation" data-src="explain">${esc(L.copy)}</button>
@@ -309,17 +392,17 @@ app.innerHTML = `
         </div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="explain">${esc(L.next)}</button></div>
       </section>
-      <!-- 3 gaps -->
-      <section class="stage" data-stage="3">
-        <h2>${esc(L.s3t)}</h2><p class="lead">${esc(L.s3l)}</p>
+      <!-- 4 gaps -->
+      <section class="stage" data-stage="4" role="tabpanel" id="panel-4" aria-labelledby="tab-4">
+        <h2 tabindex="-1">${esc(L.s3t)}</h2><p class="lead">${esc(L.s3l)}</p>
         <div id="gaps">${f.gapChecklist.map(g=>gapHTML(g)).join("")}</div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="gaps">${esc(L.next)}</button></div>
       </section>
-      <!-- 4 analogy -->
-      <section class="stage" data-stage="4">
-        <h2>${esc(L.s4t)}</h2><p class="lead">${esc(L.s4l)}</p>
-        <textarea id="analogy" placeholder="${esc(L.s4ph)}"></textarea>
-        <div class="hint" id="analogyHint"></div>
+      <!-- 5 analogy -->
+      <section class="stage" data-stage="5" role="tabpanel" id="panel-5" aria-labelledby="tab-5">
+        <h2 tabindex="-1">${esc(L.s4t)}</h2><p class="lead">${esc(L.s4l)}</p>
+        <textarea id="analogy" placeholder="${esc(L.s4ph)}" aria-label="${esc(L.s4t)}"></textarea>
+        <div class="hint" id="analogyHint" aria-live="polite"></div>
         <div class="row">
           <button class="btn-ghost" data-copy="analogy" data-src="analogy">${esc(L.copy)}</button>
           <button class="btn-ghost" data-reveal="analogy" data-src="analogy">${esc(L.reveal)}</button>
@@ -330,33 +413,34 @@ app.innerHTML = `
         </div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="analogy">${esc(L.next)}</button></div>
       </section>
-      <!-- 5 recall -->
-      <section class="stage" data-stage="5">
-        <h2>${esc(L.s5t)}</h2><p class="lead">${esc(L.s5l)}</p>
+      <!-- 6 recall -->
+      <section class="stage" data-stage="6" role="tabpanel" id="panel-6" aria-labelledby="tab-6">
+        <h2 tabindex="-1">${esc(L.s5t)}</h2><p class="lead">${esc(L.s5l)}</p>
         <div class="fcbar"><button class="btn-ghost fcbtn" id="fcFilter">${esc(L.fconly)}</button><span id="fcLeft"></span></div>
         <div id="cards"></div>
         <div class="challenge">
-          <h2>${esc(L.challenge)}</h2>
+          <h2 tabindex="-1">${esc(L.challenge)}</h2>
           <div class="scenario">${esc(f.teachBackPrompt)}</div>
-          <textarea id="teach" placeholder="${esc(L.s2ph)}"></textarea>
+          <textarea id="teach" placeholder="${esc(L.s2ph)}" aria-label="${esc(L.challenge)}"></textarea>
           <div class="row"><button class="btn-ghost" data-copy="teachBack" data-src="teach">${esc(L.copy)}</button></div>
         </div>
         <div class="done-banner">${esc(L.donemsg)}</div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" id="doneBtn">${esc(L.done)}</button></div>
       </section>
     </div>
+    <div class="kbd-hint">${L.kbdhint}</div>
     <div class="progress-note">${esc(L.note)}</div>
   </div>`;
 
 function gapHTML(g){
   return `<div class="gap" data-gap="${esc(g.id)}">
     <div class="q">${esc(g.prompt)}</div>
-    <div class="marks">
-      <span class="mark" data-v="solid">${esc(L.solid)}</span>
-      <span class="mark" data-v="shaky">${esc(L.sh)}</span>
-      <span class="mark" data-v="cant">${esc(L.cant)}</span>
+    <div class="marks" role="group" aria-label="${esc(g.prompt)}">
+      <button type="button" class="mark" data-v="solid" aria-pressed="false">${esc(L.solid)}</button>
+      <button type="button" class="mark" data-v="shaky" aria-pressed="false">${esc(L.sh)}</button>
+      <button type="button" class="mark" data-v="cant" aria-pressed="false">${esc(L.cant)}</button>
     </div>
-    <div class="redo"><div class="cap">${esc(L.redocap)}</div><textarea placeholder="${esc(L.redoph)}"></textarea></div>
+    <div class="redo"><div class="cap">${esc(L.redocap)}</div><textarea placeholder="${esc(L.redoph)}" aria-label="${esc(L.redocap)}"></textarea></div>
   </div>`;
 }
 
@@ -368,7 +452,7 @@ function renderCards(){
   const visible = order.filter(i => !onlyMissed || state.cardMarks[i] !== 'got');
   box.innerHTML = visible.map(i=>{
     const c = TUTOR.feynman.flashcards[i]; const m = state.cardMarks[i]||"";
-    return `<div class="fc ${m}" data-card="${i}">
+    return `<div class="fc ${m}" data-card="${i}" tabindex="0" role="button" aria-label="${esc(L.front)}">
       <div class="side">${esc(L.front)}</div><div class="q">${esc(c.q)}</div>
       <div class="a"><span class="side">${esc(L.back2)}</span><div>${esc(c.a)}</div></div>
       <div class="fcbtns"><button class="btn-ghost fcbtn" data-fc="got">${esc(L.fcgot)}</button><button class="btn-ghost fcbtn" data-fc="again">${esc(L.fcagain)}</button></div>
@@ -381,22 +465,43 @@ function renderCards(){
 /* ============================================================
    WIRE UP
    ============================================================ */
-// stage navigation
-function showStage(i){
+// stage navigation. `focusHeading` moves keyboard/SR focus into the new panel.
+function showStage(i, focusHeading){
   i = Math.max(0, Math.min(STAGES-1, i));
   state.currentStage = i;
   document.querySelectorAll('.stage').forEach(s=> s.classList.toggle('active', +s.dataset.stage===i));
-  document.querySelectorAll('.step').forEach(s=>{ const si=+s.dataset.i; s.classList.toggle('active', si===i); s.classList.toggle('done', si<i); });
+  document.querySelectorAll('.step').forEach(s=>{ const si=+s.dataset.i;
+    s.classList.toggle('active', si===i); s.classList.toggle('done', si<i);
+    s.setAttribute('aria-selected', si===i ? 'true':'false');
+  });
   refreshGates();
+  if(focusHeading){
+    const h = document.querySelector('.stage[data-stage="'+i+'"] h2');
+    if(h) h.focus({preventScroll:true});
+  }
   window.scrollTo({top:0, behavior:'smooth'});
   save();
 }
-document.getElementById('stepper').addEventListener('click', e=>{ const st=e.target.closest('.step'); if(st) showStage(+st.dataset.i); });
-document.querySelectorAll('[data-next]').forEach(b=> b.addEventListener('click', ()=> showStage(state.currentStage+1)));
-document.querySelectorAll('[data-back]').forEach(b=> b.addEventListener('click', ()=> showStage(state.currentStage-1)));
+document.getElementById('stepper').addEventListener('click', e=>{ const st=e.target.closest('.step'); if(st) showStage(+st.dataset.i, true); });
+document.querySelectorAll('[data-next]').forEach(b=> b.addEventListener('click', ()=> showStage(state.currentStage+1, true)));
+document.querySelectorAll('[data-back]').forEach(b=> b.addEventListener('click', ()=> showStage(state.currentStage-1, true)));
+
+// keyboard: ←/→ walk stages (respect the gate; never hijack while typing or with a modifier)
+document.addEventListener('keydown', e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const tag = (e.target.tagName||"").toLowerCase();
+  if(tag==='textarea' || tag==='input') return;
+  if(e.key==='ArrowRight'){
+    const nextBtn = document.querySelector('.stage[data-stage="'+state.currentStage+'"] [data-next]');
+    if(nextBtn && !nextBtn.disabled){ e.preventDefault(); showStage(state.currentStage+1, true); }
+  } else if(e.key==='ArrowLeft'){
+    if(state.currentStage>0){ e.preventDefault(); showStage(state.currentStage-1, true); }
+  }
+});
 
 // gate: can the learner advance from this stage?
 function gatePasses(name){
+  if(name==='predict') return canReveal(state.predictText);
   if(name==='explain') return canReveal(state.explainText);
   if(name==='analogy') return canReveal(state.analogyText);
   if(name==='gaps') return f.gapChecklist.every(g=> state.gapMarks[g.id]);
@@ -424,6 +529,16 @@ document.querySelectorAll('[data-reveal]').forEach(b=>{
 // copy grading buttons
 document.querySelectorAll('[data-copy]').forEach(b=>{
   b.addEventListener('click', ()=>{ const src=document.getElementById(b.dataset.src); copyGrade(b.dataset.copy, src?src.value:""); });
+});
+
+// predict textarea (NEW)
+const predict = document.getElementById('predict');
+predict.value = state.predictText;
+predict.addEventListener('input', ()=>{
+  state.predictText = predict.value;
+  document.getElementById('predictMeter').textContent = L.wc(wordCount(predict.value));
+  document.getElementById('predictHint').textContent = checkPrediction(predict.value);
+  refreshGates(); save();
 });
 
 // explain textarea
@@ -455,7 +570,7 @@ document.querySelectorAll('.gap').forEach(gp=>{
   const redo = gp.querySelector('.redo'); const redoTa = redo.querySelector('textarea');
   function paint(){
     const v = state.gapMarks[id];
-    gp.querySelectorAll('.mark').forEach(m=> m.classList.toggle('on', m.dataset.v===v));
+    gp.querySelectorAll('.mark').forEach(m=> m.setAttribute('aria-pressed', m.dataset.v===v ? 'true':'false'));
     redo.classList.toggle('show', v==='shaky' || v==='cant');
   }
   gp.querySelectorAll('.mark').forEach(m=>{
@@ -475,6 +590,12 @@ cardsBox.addEventListener('click', e=>{
     state.cardMarks[i]=fcBtn.dataset.fc; save(); renderCards(); return; }
   const card = e.target.closest('.fc'); if(card) card.classList.toggle('flip');
 });
+// keyboard: Enter/Space flips a focused card
+cardsBox.addEventListener('keydown', e=>{
+  if(e.target.classList && e.target.classList.contains('fc') && (e.key==='Enter'||e.key===' ')){
+    e.preventDefault(); e.target.classList.toggle('flip');
+  }
+});
 document.getElementById('fcFilter').addEventListener('click', ()=>{
   const on = cardsBox.dataset.filter==='1'; cardsBox.dataset.filter = on?'0':'1';
   document.getElementById('fcFilter').textContent = on ? L.fconly : L.fcall;
@@ -484,15 +605,17 @@ renderCards();
 
 // done
 document.getElementById('doneBtn').addEventListener('click', ()=>{
-  state.done = true; document.querySelector('.stage[data-stage="5"]').classList.add('done'); save(); toast(L.donemsg);
+  state.done = true; document.querySelector('.stage[data-stage="6"]').classList.add('done'); save(); toast(L.donemsg);
 });
 
 /* ---- rehydrate reveals + done + resume stage ---- */
 Object.keys(state.revealed).forEach(k=>{ if(state.revealed[k]){ const m=document.getElementById('model-'+k); if(m) m.classList.add('open'); } });
-if(state.done) document.querySelector('.stage[data-stage="5"]').classList.add('done');
+if(state.done) document.querySelector('.stage[data-stage="6"]').classList.add('done');
+document.getElementById('predictMeter').textContent = L.wc(wordCount(state.predictText));
+document.getElementById('predictHint').textContent = checkPrediction(state.predictText);
 document.getElementById('explainMeter').textContent = L.wc(wordCount(state.explainText));
 document.getElementById('analogyHint').textContent = checkAnalogy(state.analogyText);
-showStage(state.currentStage||0);
+showStage(state.currentStage||0, false);
 </script>
 </body>
 </html>
