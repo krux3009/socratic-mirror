@@ -1,52 +1,54 @@
-# 苏格拉底之镜 · 学习工具 (socratic-mirror)
+# Socratic Mirror
 
-把任意一个概念，变成一份**可交互的 HTML 学习页**：先用一个**寓言**把概念间接讲懂（结尾才点破是什么），再用**费曼学习法**逼你自己讲一遍、找出知识漏洞、打个比方、做主动回忆。所有标准答案，在你写下自己的解释之前一直**锁着**——逼你"先输出，再揭晓"，而不是看着眼熟就以为懂了。
+Turn any concept into a self-contained **interactive HTML study page**: a **parable** teaches the idea indirectly (the term is revealed only at the very end), then the **Feynman technique** makes you explain it back, hunt your own gaps, forge an analogy, and self-test — with every model answer **locked until you write your own first**.
 
-> 像苏格拉底那样，它不直接把答案塞给你，而是把你自己的理解照回给你看。
-> 适合学生、自学者，以及任何"一看就会、一做就废、过两天全忘"的人。
+> Like Socrates, it doesn't hand you the answer — it reflects your own understanding back at you.
 
-## 为什么需要它
+*A Claude Code / [openclawmp](https://openclawmp.stepfun.com) skill. The skill ships Chinese-first for the openclawmp marketplace, but the generated study pages are **language-adaptive** — a Chinese concept yields a Chinese page, an English concept an English one. 中文说明见 [README.zh-CN.md](README.zh-CN.md).*
 
-只让 AI 讲、你点头，是最常见的**能力错觉**——眼熟 ≠ 懂得。本工具把"先凭自己讲一遍"写进了代码（答案带锁），逼你真正产出，缝隙才会暴露。背后是三条被反复验证的学习原理：**主动回忆**（自己回想比反复重读记得牢）、**自我解释**（讲出来才把点连成线）、**比方=理解的压缩**（能打中比方说明抓住了本质）。
+## Why
 
-## 六个阶段
+"AI explains, you nod" is the most common **illusion of competence** — recognizing ≠ understanding. Socratic Mirror writes *produce-before-you-see-the-answer* into the code: answers stay gated until you've written your own, so you actually generate an explanation and your gaps surface. Grounded in three well-supported learning principles: **retrieval practice** (recall beats rereading), **self-explanation** (meta-analysis effect size g = 0.55), and **analogy as the compression of real understanding**.
 
-**寓言**（间接讲懂）→ **揭晓**（点破概念）→ **你来讲**（讲给12岁小孩听）→ **找漏洞**（逐条自评，标"还不行"的必须回去补）→ **打比方** → **主动回忆 + 教学挑战**。
+## How it works — six stages
 
-## 功能特性
+**Parable** (taught indirectly) → **Reveal** (the term, finally named) → **Explain** (in your own words, to a 12-year-old) → **Gap-hunt** (self-mark each tricky spot; anything shaky you must go back and re-explain) → **Analogy** (forge one, find where it breaks) → **Active recall + teach-back challenge**.
 
-- **答案带锁** — 写够一段自己的解释，范例答案才解锁（先输出，再揭晓）。
-- **寓言编码** — 用故事把抽象概念讲活，领域/术语结尾才揭晓（源自 Amanda Askell 的"寓言提示词"）。
-- **一键求点评** — 把"你的作答 + 评分指令"拷进剪贴板，粘到任意 AI 对话（阶跃 / Claude 等）拿即时点评；只诊断、不替你写。
-- **自动存档** — 进度与作答存在本机浏览器，关掉再开继续。
-- **完全自包含** — 单个 HTML 文件，离线可用，无需 API key、无外部依赖。
+Every model answer stays locked until your own attempt clears a "real attempt" gate. Progress auto-saves in the browser. A **"copy grading prompt"** button hands your attempt + a grading instruction to any AI chat for instant feedback — diagnosis only; it won't rewrite the answer for you.
 
-## 安装
+## Features
+
+- **Answers gated** — produce before reveal, enforced in code (not the honor system).
+- **Self-contained** — one HTML file, works offline, no API key, no dependencies.
+- **Language-adaptive** — the study page follows the concept's language.
+- **Resumable** — per-concept progress in `localStorage`.
+
+## Install
 
 ```bash
 openclawmp install skill/socratic-mirror --target-dir ./skills
 ```
 
-## 用法
+Or use it as a Claude Code skill — drop the folder into your skills directory.
 
-1. 触发：`/learn 比较优势`（或 `/feynman <概念>`、自然语言"教我 X / 帮我学懂 X"）。
-2. 概念太宽时，它最多问你 1–2 个问题把题目收窄。
-3. 它生成 `./<概念>.html`，用浏览器打开，一步步走完六阶——记住：答案在你动手写之前一直锁着。
-4. 想要即时点评时，点"复制评分提示词"，粘到你的 AI 对话里。
+## Usage
 
-## 配置
+Trigger with `/learn <concept>` (also `/feynman`, `/parable`, or natural language like *"teach me X" / "help me really understand X"*). It asks at most 1–2 questions only if the concept is too broad, then writes `./<concept>.html` — open it in a browser and work through the six stages. Answers stay locked until you write your own.
 
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| 难度 | `undergrad` / `grad` / `research` | `grad` |
-| 领域 | 概念所属领域（决定寓言取材） | 自动推断 |
-| 输出语言 | 跟随你给的概念语言（中 / 英） | 自动 |
-| 输出位置 | 生成的 HTML 存放路径 | 当前目录 |
+## Repository layout
 
-## 设计理念：先输出，再揭晓
+| Path | What |
+|---|---|
+| `SKILL.md` | The skill's instructions + 7-step workflow (written in Chinese — it targets the openclawmp audience) |
+| `references/` | The pedagogy + authoring rules the skill loads at runtime (Feynman method, parable method, anti-AI-slop, the HTML data contract) |
+| `assets/tutor-template.html` | The single-file interactive study page (vanilla JS, warm-graphite theme) |
+| `assets/grading-prompts.md` | The paste-to-AI grading prompts embedded into each page |
+| `.metadata.json` | openclawmp asset manifest |
 
-寓言负责"编码"（把概念讲进脑子里），费曼负责"提取"（逼你把它讲出来）。两者之间隔着一道**锁**——你不先写下自己的解释，就看不到标准答案。这道锁，就是这个工具的全部意义：它不让你停留在"看着眼熟"，而是逼你抵达"真的会讲"。
+## Design note: produce before reveal
 
-## 许可
+The parable does the **encoding** (gets the idea into your head); Feynman does the **retrieval** (gets it back out). Between them sits a lock — you don't see the model answer until you've written your own. That lock is the whole point: it stops you at "looks familiar" and pushes you to "I can actually explain it."
 
-MIT · 作者 Li Xuan ([krux3009](https://github.com/krux3009))
+## License
+
+MIT © Li Xuan ([krux3009](https://github.com/krux3009))
