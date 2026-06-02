@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>学习页 · parable-feynman-tutor</title>
+<title>学习页 · 苏格拉底之镜</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -190,7 +190,7 @@ const STRINGS = {
 /* ---- guard: raw template (not yet generated) ---- */
 if(!TUTOR){
   document.getElementById('app').innerHTML =
-    '<div class="notice"><h2>这是模板文件</h2><p>这是 <code>parable-feynman-tutor</code> 的 HTML 模板。'+
+    '<div class="notice"><h2>这是模板文件</h2><p>这是 <code>socratic-mirror</code> 的 HTML 模板。'+
     '运行该 skill（如 <code>/learn 比较优势</code>）来生成一份真正可用的学习页。</p>'+
     '<p style="font-size:13px">This is the template. Run the skill to generate a real study page.</p></div>';
   throw new Error("template only — no TUTOR data");
@@ -199,7 +199,7 @@ if(!TUTOR){
 const L = STRINGS[TUTOR.lang === 'en' ? 'en' : 'zh'];
 document.documentElement.lang = (TUTOR.lang==='en'?'en':'zh');
 document.title = TUTOR.concept + " · 学习页";
-const KEY = 'pft:' + TUTOR.slug;
+const KEY = 'sm:' + TUTOR.slug;
 const STAGES = 6;
 
 /* ---- state + persistence ---- */

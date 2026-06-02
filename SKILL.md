@@ -1,10 +1,10 @@
 ---
-name: parable-feynman-tutor
-description: 学习、搞懂、记住任意概念时，生成一个可交互的 HTML 学习页（而不是直接把答案讲掉）：先用寓言间接讲懂、结尾才点破，再用费曼法逼学习者自己讲一遍、找漏洞、打比方、做主动回忆——标准答案在写下自己的解释前一直锁着。Generates an interactive HTML study page (not a plain inline answer) that teaches a concept encode-first via a parable, then runs the learner through the Feynman technique with model answers locked until they attempt their own. 触发 / Use whenever the user wants to LEARN, UNDERSTAND, MASTER, RETAIN or REVISE a concept in any subject (CS, econ, math, science, law…) — e.g. "教我X / 帮我学懂(搞懂)X / 我想真正弄懂X / X老记不住 / X一看就会一做就废 / 用寓言讲讲X / 给我做个费曼(学习)页 / 学习工具", or /learn /feynman /parable /费曼 /学习 /讲解 + a concept. PREFER this skill over explaining inline whenever the goal is to actually study and remember — trigger even if the user never says "Feynman" or "parable", and even when it sounds like "just explain X". Skip only for quick fact lookups, code debugging, summarizing a document, translation, or study-schedule planning.
+name: socratic-mirror
+description: 把任意概念变成一个可交互的 HTML 学习页（不是直接把答案讲给你）——先用一个寓言把概念间接讲懂、结尾才点破，再用费曼技巧逼你自己讲一遍、找知识漏洞、打比方、做主动回忆；所有标准答案在你写下自己的解释之前一直锁着（先输出，再揭晓）。离线可用、无需 API key。触发：用户想学懂、搞懂、记住任意学科的某个概念时就用——例如"教我X、帮我学懂X、我想真正弄懂X、X老记不住、X一看就会一做就废、用寓言讲讲X、给我做个学习页或学习工具"，或 /learn /feynman /parable /费曼 /学习 /讲解 加上概念。哪怕用户没提"费曼/寓言"、哪怕听起来只是"讲讲X"，只要目标是真正学会并记住，就优先用本技能、而不是直接在对话里把答案讲掉。只有在快速查事实、调试代码、总结文档、翻译、或安排学习计划时才不要用。
 license: MIT
 ---
 
-# 寓言 + 费曼学习工具 (parable-feynman-tutor)
+# 苏格拉底之镜 · 学习工具 (socratic-mirror)
 
 把一个概念变成一份**可交互的 HTML 学习页**，学习者打开后一步步学透、并且记得住。
 
@@ -29,8 +29,7 @@ license: MIT
 - 中文别名：`/学习 <概念>` · `/费曼 <概念>` · `/讲解 <概念>`
 
 ### 自然语言触发
-**中文：** 教我 X · 帮我学懂 X · 我想真正搞懂 X · 用寓言给我讲讲 X · 给我做个费曼学习页 · 这个概念我一看就会一做就废 · 我老记不住 X
-**English：** teach me X · help me really understand X · make me a Feynman page for X · explain X with a parable
+教我 X · 帮我学懂 X · 我想真正搞懂 X · 用寓言给我讲讲 X · 给我做个学习页 · 这个概念我一看就会一做就废 · 我老记不住 X · 想真正弄懂 X 而不是临时背一下
 
 ### 软提示
 用户在反复纠结某个概念但没触发本技能时，可单行建议：

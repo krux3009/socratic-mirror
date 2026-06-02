@@ -37,7 +37,7 @@
     "analogy": "……",
     "teachBack": "……"
   },
-  "meta": { "generatedBy": "parable-feynman-tutor", "version": "1.0.0" }
+  "meta": { "generatedBy": "socratic-mirror", "version": "1.0.0" }
 }
 ```
 
@@ -65,4 +65,4 @@
 1. **唯一注入点**：`const TUTOR = /*__TUTOR_DATA__*/ null;`，全文件只此一处。
 2. **完全自包含**：无 `<script src=...>`、无 `fetch(`、无 API key、无外部依赖（webfont 的 `<link>` 是渐进增强，可断网降级到系统字体）。
 3. **reveal-gate**：任何 `model*` 标准答案，在 `canReveal(学习者输入)` 为真之前都保持隐藏。
-4. **localStorage key = `pft:<slug>`**，按 slug 命名空间，避免多概念页互相覆盖。
+4. **localStorage key = `sm:<slug>`**，按 slug 命名空间，避免多概念页互相覆盖。
