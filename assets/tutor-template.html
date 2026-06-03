@@ -101,6 +101,17 @@
   .redo.show{display:block}
   .redo textarea{min-height:70px}
   .redo .cap{font-size:13px; color:var(--cant); margin-bottom:6px; font-weight:600}
+  /* comprehension MCQ */
+  .mcq-q{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px}
+  .mcq-q .q{font-weight:500; margin-bottom:10px}
+  .opts{display:flex; flex-direction:column; gap:8px}
+  .opt{display:block; width:100%; text-align:left; font-weight:500; padding:11px 14px; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink)}
+  .opt:hover:not(:disabled){border-color:var(--accent)}
+  .opt.correct{border-color:var(--good); color:var(--good); background:rgba(91,140,90,.10)}
+  .opt.wrong{border-color:var(--cant); color:var(--cant); background:rgba(191,91,74,.10)}
+  .opt:disabled{cursor:default; opacity:1}   /* override the global button:disabled fade so locked options stay legible (print + a11y) */
+  .mcq-fb{font-size:13.5px; margin-top:10px; min-height:1.2em}
+  .mcq-fb.good{color:var(--good)} .mcq-fb.bad{color:var(--cant)}
   /* flashcards */
   .fc{border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:12px; cursor:pointer; background:var(--bg)}
   .fc .side{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:700}
@@ -124,9 +135,8 @@
   .notice code{background:var(--line2); padding:2px 7px; border-radius:6px; color:var(--accent-ink)}
   .progress-note{font-size:12.5px; color:var(--faint); text-align:center; margin-top:14px}
   /* ===== print: a finished, self-archivable worked sheet =====
-     Cmd/Ctrl-P reveals every stage + every locked answer + every card back,
-     hides the interactive chrome. The reveal-gate is a learning discipline,
-     not DRM — once you're printing, you've done the work. */
+     Cmd/Ctrl-P expands every stage — your MCQ answers + the correct option +
+     each rationale + every card back — and hides the interactive chrome. */
   @media print{
     :root{--bg:#fff; --card:#fff; --ink:#000; --muted:#222; --faint:#555; --line:#bbb; --line2:#ddd; --accent-soft:#f2f2f2; --shadow:none}
     body{font-size:11.5pt}
@@ -139,6 +149,8 @@
     .model .lock{display:none !important}
     .model .body{display:block !important}
     .redo{display:block !important}
+    .mcq-fb{display:block !important}
+    .opt.correct::after{content:" ✓"}
     .fc .a{display:block !important}
     .fc{cursor:auto; break-inside:avoid}
   }
@@ -160,74 +172,54 @@ const TUTOR = /*__TUTOR_DATA__*/ null;
 /* ---- UI strings (bilingual) ---- */
 const STRINGS = {
   zh:{
-    kicker:"双寓言 + 费曼学习法",
-    steps:["故事","猜共性","揭晓","讲一遍","找漏洞","打比方","回忆"],
+    kicker:"双寓言 + 选择题诊断",
+    steps:["故事","猜共性","揭晓","自测","查漏洞","辨比方","回忆"],
     storyLabel:(i,d)=>"故事"+["一","二","三","四","五"][i]+(d?" · "+d:""),
     s0t:"先读两个故事",      s0l:"两个故事表面毫不相干，却藏着同一台『机器』。读完它们——结尾才点破是什么概念，别急着往下翻。",
     s0sep:"∗ ∗ ∗",
     s0btn:"两个都读完了 →",
-    sPt:"它们到底共享什么？",  sPl:"两个故事的皮完全不同，骨架却是同一台机器。先别翻——写下你的猜测：它们共用的是哪一个机制？（这一步逼你把表面细节剥掉、只抓结构。）",
-    sPph:"两个故事其实都在讲……因为……",
-    predictTag:"共享机制（写完再对照；这里先不点名，名字下一步才揭晓）",
-    s1t:"原来讲的是……",      s1l:"你猜的那台机器，正式名字是——",
-    s2t:"现在你来讲",         s2l:"用大白话讲给一个12岁小孩听，不许用术语。讲不顺的地方，就是你还没真懂的地方。",
-    s2ph:"假设对面是个聪明但完全没学过这个的小孩，你会怎么讲……",
-    s3t:"找出你的漏洞",       s3l:"逐条自评。标成『还不行/不太稳』的，必须回去重讲一遍——漏洞不许标完就跑。",
-    s4t:"打个比方",          s4l:"一个好比方 = 真理解的压缩。写下你的比方；它在哪里成立、在哪里会失效？",
-    s4ph:"这个概念就像……因为……",
-    s5t:"主动回忆 + 教学挑战", s5l:"先翻卡自测，再用学到的去解一个新场景。",
-    reveal:"🔓 看范例解答",   locked:"先写下你自己的解释，才解锁范例（认得 ≠ 懂得）",
-    copy:"📋 复制评分提示词",  copied:"已复制——粘到任意 AI 对话里让它给你点评",
-    copyfail:"复制失败，请手动选中复制",
-    modelTag:"范例解答（写完再对照）",
-    solid:"✓ 讲得清",sh:"~ 不太稳",cant:"✗ 还不行",
-    redocap:"回去用更简单的话再讲一遍这一点：",
-    redoph:"重讲……",
+    sPt:"它们到底共享什么？",  sPl:"两个故事的皮完全不同，骨架却是同一台机器。先别翻到揭晓——从下面选出它们真正共用的那个机制。（这一步逼你剥掉表面、只认结构。）",
+    s1t:"原来讲的是……",      s1l:"你认出的那台机器，正式名字是——",
+    mcqT:"先自测一下你听懂了没", mcqL:"每题选一个；点下去立刻告诉你对不对、为什么。错了也没关系——看一眼解释就懂了。",
+    s3t:"查一查你最容易翻车的地方", s3l:"这些是这个概念最常被搞反、被术语糊弄过去的点。逐题选，错了立刻看为什么。",
+    s4t:"哪个比方抓住了本质？", s4l:"好比方 = 真理解的压缩；坏比方表面像、骨子里错。选出对的，并从反馈里看清错的错在哪、对的在哪会失效。",
+    s5t:"主动回忆 + 迁移",     s5l:"先翻卡自测，再做一道迁移题。",
+    transT:"迁移挑战",        transL:"把概念用到一个全新场景——选出正确的应用，而不是复述定义。",
+    mcqCorrect:"✓ 对了", mcqWrong:"✗ 不对",
+    mcqWrongGeneric:"不对——看正确选项就明白了。",
+    mcqProgress:(a,b)=>`已答 ${a}/${b}`,
     next:"下一步 →",back:"← 上一步",
     front:"问题（点开看答案）",back2:"答案",fcgot:"记住了",fcagain:"再练",
     fconly:"只练没记住的",fcall:"练全部",fcleft:n=>`还剩 ${n} 张要练`,
-    challenge:"教学挑战",done:"完成学习",
+    done:"完成学习",
     donemsg:"🎉 学完一轮。隔几天回来再翻一次卡，记得更牢。",
     note:"进度自动保存在本机浏览器，关掉再开还在。",
-    kbdhint:`提示：用 <kbd>←</kbd> <kbd>→</kbd> 在各阶段之间走；想存档就 <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> 打印成 PDF（会展开全部范例答案）。`,
-    aHintLink:"试着明确写出『谁对应谁』。",aHintShort:"再展开一点——一句话还不够。",
-    pHintMech:"说出两个故事共享的『机制/关系』，而不只是同一个话题词。",
-    wc:n=>`${n} 字`,
+    kbdhint:`提示：用 <kbd>←</kbd> <kbd>→</kbd> 在各阶段之间走；想存档就 <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> 打印成 PDF（展开全部阶段）。`,
   },
   en:{
-    kicker:"Two parables + Feynman",
-    steps:["Stories","Predict","Reveal","Explain","Gaps","Analogy","Recall"],
+    kicker:"Two parables + multiple-choice",
+    steps:["Stories","Predict","Reveal","Check","Gaps","Analogy","Recall"],
     storyLabel:(i,d)=>"Story "+(i+1)+(d?" · "+d:""),
     s0t:"First, two stories",  s0l:"Two stories that look unrelated hide the same machine. Read both — the concept is only named at the very end. Don't skip ahead.",
     s0sep:"∗ ∗ ∗",
     s0btn:"Read them both →",
-    sPt:"What do they secretly share?", sPl:"The two stories share no surface detail, but the same skeleton. Before you reveal it — write your guess: which one mechanism do they have in common? (This forces you to strip the surface and grab the structure.)",
-    sPph:"Both stories are really about… because…",
-    predictTag:"The shared mechanism (compare after you write; not named yet — the name comes next)",
-    s1t:"It was about…",       s1l:"That machine you guessed at has a name —",
-    s2t:"Now you explain it", s2l:"Explain it to a smart 12-year-old, no jargon. Wherever you stall is where you don't really get it yet.",
-    s2ph:"Imagine a clever kid who's never seen this. How would you put it…",
-    s3t:"Hunt your gaps",     s3l:"Self-mark each one. Anything 'not yet / shaky' you must re-explain — no marking-and-running.",
-    s4t:"Forge an analogy",   s4l:"A good analogy = compression of real understanding. Where does yours hold, and where does it break?",
-    s4ph:"This is like… because…",
-    s5t:"Active recall + teach-back", s5l:"Self-test with cards, then use it on a fresh scenario.",
-    reveal:"🔓 Show model answer", locked:"Write your own attempt first to unlock (recognizing ≠ understanding)",
-    copy:"📋 Copy grading prompt", copied:"Copied — paste into any AI chat for feedback",
-    copyfail:"Copy failed — select and copy manually",
-    modelTag:"Model answer (compare after you write)",
-    solid:"✓ Got it",sh:"~ Shaky",cant:"✗ Not yet",
-    redocap:"Go back and re-explain this in simpler words:",
-    redoph:"Re-explain…",
+    sPt:"What do they secretly share?", sPl:"The two stories share no surface detail, but the same skeleton. Before you reveal it — pick the one mechanism they truly have in common. (This forces you to strip the surface and grab the structure.)",
+    s1t:"It was about…",       s1l:"The machine you spotted has a name —",
+    mcqT:"Quick comprehension check", mcqL:"Pick one per question; you get instant right/wrong + why. Getting one wrong is fine — the explanation teaches it.",
+    s3t:"Check where you'd trip", s3l:"These are the spots people most often get backwards or hide behind jargon. Pick one per question; a wrong pick shows you why on the spot.",
+    s4t:"Which analogy nails it?", s4l:"A good analogy = compression of real understanding; a bad one looks similar but is wrong underneath. Pick the right one — the feedback shows where the wrong ones fail and where the right one breaks.",
+    s5t:"Active recall + transfer", s5l:"Self-test with cards, then a transfer question.",
+    transT:"Transfer challenge", transL:"Apply the concept to a brand-new scenario — pick the correct application, not a restatement of the definition.",
+    mcqCorrect:"✓ Correct", mcqWrong:"✗ Not quite",
+    mcqWrongGeneric:"Not quite — see the highlighted answer.",
+    mcqProgress:(a,b)=>`${a}/${b} answered`,
     next:"Next →",back:"← Back",
     front:"Question (tap to flip)",back2:"Answer",fcgot:"Knew it",fcagain:"Again",
     fconly:"Only the ones I missed",fcall:"Practice all",fcleft:n=>`${n} card(s) left`,
-    challenge:"Teach-back challenge",done:"Finish",
+    done:"Finish",
     donemsg:"🎉 One pass done. Come back in a few days and flip the cards again to lock it in.",
     note:"Progress auto-saves in this browser; reopen anytime.",
-    kbdhint:`Tip: use <kbd>←</kbd> <kbd>→</kbd> to move between stages; <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> to print a PDF (all model answers expand).`,
-    aHintLink:"Try naming what maps to what.",aHintShort:"Expand a bit more — one line isn't enough.",
-    pHintMech:"Name the mechanism/relationship the two stories share — not just a common topic.",
-    wc:n=>`${n} words`,
+    kbdhint:`Tip: use <kbd>←</kbd> <kbd>→</kbd> to move between stages; <kbd>⌘/Ctrl</kbd>+<kbd>P</kbd> to print a PDF (all stages expand).`,
   }
 };
 
@@ -252,12 +244,11 @@ const PARABLES = Array.isArray(TUTOR.encode.parables) && TUTOR.encode.parables.l
   : (TUTOR.encode.parable ? [{story:TUTOR.encode.parable, domain:TUTOR.domain}] : []);
 
 /* ---- state + persistence ---- */
-const DEFAULT = {v:2, currentStage:0, explainText:"", predictText:"", gapMarks:{}, gapNotes:{},
-                 analogyText:"", teachBackText:"", cardMarks:{}, revealed:{}, done:false};
+const DEFAULT = {v:4, currentStage:0, mcqAnswers:{}, cardMarks:{}, done:false};
 let state = load();
 function load(){
-  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.v===2) return Object.assign({}, DEFAULT, s); }catch(e){}
-  return Object.assign({}, DEFAULT);
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.v===4) return Object.assign({}, DEFAULT, s); }catch(e){}
+  return Object.assign({}, DEFAULT);  // older stores reset — every interactive stage is now multiple-choice (no free-text state)
 }
 
 // 💡 tweakable #3 — debounce: wait until typing pauses (400ms) before writing localStorage,
@@ -266,48 +257,7 @@ let _t;
 function save(){ clearTimeout(_t); _t = setTimeout(persist, 400); }
 function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
-/* ---- THE gate: produce before reveal ---- */
-// 💡 tweakable #1 — the heart of this whole tool. A model answer stays locked until canReveal() is true.
-//   Default: require a real attempt (≥12 latin words OR ≥25 CJK characters). Make it smarter if you like:
-//   require ≥2 sentences, reject if it's just the term repeated, scale the bar per stage, etc.
-function canReveal(text){
-  const t = (text||"").trim();
-  if(!t) return false;
-  const words = t.split(/\s+/).filter(Boolean).length;
-  const cjk = (t.match(/[一-鿿]/g)||[]).length;
-  return words >= 12 || cjk >= 25;
-}
-
-// 💡 tweakable #2 — a gentle nudge on the learner's analogy (not a grade). Pure heuristics over the text.
-function checkAnalogy(text){
-  const t = (text||"").trim();
-  if(!t) return "";
-  const out = [];
-  if(!/(像|如同|好比|类似|相当于|like |as if|similar|analog)/i.test(t)) out.push(L.aHintLink);
-  if(!canReveal(t)) out.push(L.aHintShort);
-  return out.join(" ");
-}
-
-// 💡 tweakable #5 — YOUR TURN (Predict stage nudge).
-//   A good cross-story prediction strips the surface and names the shared *structure*.
-//   This returns a one-line hint string shown under the Predict textarea (or "" for no hint).
-//   It must NOT grade — just nudge, like checkAnalogy above. The hard gate is still canReveal().
-//   Ideas to consider: did the learner engage BOTH stories (not just retell one)? Did they name a
-//   relationship/mechanism rather than a mere topic word? Is it still too short to be a real guess?
-//   See the request after this build — implement the body (≈5–10 lines).
-function checkPrediction(text){
-  // Sensible default — tweak freely. The hard length gate is canReveal(); this is just a live nudge.
-  // Goal: push toward the *shared structure*, not a topic word or a retell of one story.
-  const t = (text||"").trim();
-  if(!t) return "";
-  const out = [];
-  // nudge if no relational/causal/mechanism word surfaced (looks like a topic, not a relationship)
-  if(!/(因为|所以|取决于|导致|换|交换|放弃|代价|关系|机制|both|because|depends|trade|exchange|relationship|mechanism|share)/i.test(t)) out.push(L.pHintMech);
-  if(!canReveal(t)) out.push(L.aHintShort);
-  return out.join(" ");
-}
-
-// 💡 tweakable #4 — practice order: cards you marked "again" come first, untouched next, "got it" last.
+// flashcard practice order: cards marked "again" come first, untouched next, "got it" last.
 function cardOrder(){
   const idx = TUTOR.feynman.flashcards.map((_,i)=>i);
   const w = i => state.cardMarks[i]==='got' ? 2 : state.cardMarks[i]==='again' ? 0 : 1;
@@ -317,21 +267,21 @@ function cardOrder(){
 /* ---- small helpers ---- */
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 function paras(s){return (s||"").split(/\n{2,}/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");}
-function wordCount(t){t=(t||"").trim(); if(!t) return 0; const cjk=(t.match(/[一-鿿]/g)||[]).length; return cjk || t.split(/\s+/).filter(Boolean).length;}
 let toastT;
 function toast(msg){const e=document.getElementById('toast'); e.textContent=msg; e.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('show'),2400);}
 
-async function copyGrade(stageKey, attempt){
-  const payload = TUTOR.gradingPrompts[stageKey] + "\n\n【概念 / Concept】" + TUTOR.concept + "\n\n【我的作答 / My attempt】\n" + (attempt||"");
-  try{ await navigator.clipboard.writeText(payload); toast(L.copied); }
-  catch(e){
-    // fallback for file:// where the async Clipboard API may be blocked
-    const ta=document.createElement('textarea'); ta.value=payload; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    try{ document.execCommand('copy'); toast(L.copied); }catch(e2){ toast(L.copyfail); }
-    document.body.removeChild(ta);
-  }
-}
+/* ---- the five MCQ sets, in stage order. Every interactive stage is multiple-choice. ----
+   Each question shares one shape: {id, stem, options, correct, whyCorrect, whyWrong}.
+   ids are globally unique (prefix p/c/g/a/t), so one flat state.mcqAnswers map covers all stages. */
+const MCQ_SETS = [
+  {key:'predict',       data: (TUTOR.encode.predictChecks       || [])},
+  {key:'comprehension', data: (TUTOR.feynman.comprehensionChecks || [])},
+  {key:'gaps',          data: (TUTOR.feynman.gapChecks           || [])},
+  {key:'analogy',       data: (TUTOR.feynman.analogyChecks       || [])},
+  {key:'transfer',      data: (TUTOR.feynman.transferChecks      || [])},
+];
+const Q_BY_ID = {};
+MCQ_SETS.forEach(s=> s.data.forEach(q=>{ Q_BY_ID[q.id] = q; }));
 
 /* ============================================================
    BUILD THE PAGE
@@ -355,92 +305,70 @@ app.innerHTML = `
         ${PARABLES.map((p,i)=>`<div class="parable"><div class="story-label">${esc(L.storyLabel(i, p.domain))}</div><div class="prose">${paras(p.story)}</div></div>`).join(`<div class="story-sep" aria-hidden="true">${esc(L.s0sep)}</div>`)}
         <div class="nav"><span></span><button class="btn-primary" data-next>${esc(L.s0btn)}</button></div>
       </section>
-      <!-- 1 predict (NEW) -->
+      <!-- 1 predict — MCQ: identify the shared mechanism (pre-reveal; options must NOT name the term) -->
       <section class="stage" data-stage="1" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
         <h2 tabindex="-1">${esc(L.sPt)}</h2><p class="lead">${esc(L.sPl)}</p>
-        <textarea id="predict" placeholder="${esc(L.sPph)}" aria-label="${esc(L.sPt)}"></textarea>
-        <div class="meter" id="predictMeter"></div>
-        <div class="hint" id="predictHint" aria-live="polite"></div>
-        <div class="row">
-          <button class="btn-ghost" data-reveal="predict" data-src="predict">${esc(L.reveal)}</button>
-        </div>
-        <div class="model" id="model-predict">
-          <div class="lock">🔒 ${esc(L.locked)}</div>
-          <div class="body"><div class="tag">${esc(L.predictTag)}</div><div class="prose">${paras(TUTOR.encode.predictModel||"")}</div></div>
-        </div>
+        ${mcqHTML('predict')}
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="predict">${esc(L.next)}</button></div>
       </section>
-      <!-- 2 reveal -->
+      <!-- 2 reveal (read-only) -->
       <section class="stage" data-stage="2" role="tabpanel" id="panel-2" aria-labelledby="tab-2">
         <h2 tabindex="-1">${esc(L.s1t)}</h2><p class="lead">${esc(L.s1l)}</p>
         <div class="term">${esc(TUTOR.encode.term)}</div>
         <div class="prose">${paras(TUTOR.encode.plainExplanation)}</div>
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next>${esc(L.next)}</button></div>
       </section>
-      <!-- 3 explain -->
+      <!-- 3 comprehension MCQ -->
       <section class="stage" data-stage="3" role="tabpanel" id="panel-3" aria-labelledby="tab-3">
-        <h2 tabindex="-1">${esc(L.s2t)}</h2><p class="lead">${esc(L.s2l)}</p>
-        <textarea id="explain" placeholder="${esc(L.s2ph)}" aria-label="${esc(L.s2t)}"></textarea>
-        <div class="meter" id="explainMeter"></div>
-        <div class="row">
-          <button class="btn-ghost" data-copy="simpleExplanation" data-src="explain">${esc(L.copy)}</button>
-          <button class="btn-ghost" data-reveal="simpleExplanation" data-src="explain">${esc(L.reveal)}</button>
-        </div>
-        <div class="model" id="model-simpleExplanation">
-          <div class="lock">🔒 ${esc(L.locked)}</div>
-          <div class="body"><div class="tag">${esc(L.modelTag)}</div><div class="prose">${paras(f.modelSimpleExplanation)}</div></div>
-        </div>
-        <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="explain">${esc(L.next)}</button></div>
+        <h2 tabindex="-1">${esc(L.mcqT)}</h2><p class="lead">${esc(L.mcqL)}</p>
+        ${mcqHTML('comprehension')}
+        <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="comprehension">${esc(L.next)}</button></div>
       </section>
-      <!-- 4 gaps -->
+      <!-- 4 gaps — MCQ probing the concept's common failure points -->
       <section class="stage" data-stage="4" role="tabpanel" id="panel-4" aria-labelledby="tab-4">
         <h2 tabindex="-1">${esc(L.s3t)}</h2><p class="lead">${esc(L.s3l)}</p>
-        <div id="gaps">${f.gapChecklist.map(g=>gapHTML(g)).join("")}</div>
+        ${mcqHTML('gaps')}
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="gaps">${esc(L.next)}</button></div>
       </section>
-      <!-- 5 analogy -->
+      <!-- 5 analogy — MCQ: pick the analogy that holds -->
       <section class="stage" data-stage="5" role="tabpanel" id="panel-5" aria-labelledby="tab-5">
         <h2 tabindex="-1">${esc(L.s4t)}</h2><p class="lead">${esc(L.s4l)}</p>
-        <textarea id="analogy" placeholder="${esc(L.s4ph)}" aria-label="${esc(L.s4t)}"></textarea>
-        <div class="hint" id="analogyHint" aria-live="polite"></div>
-        <div class="row">
-          <button class="btn-ghost" data-copy="analogy" data-src="analogy">${esc(L.copy)}</button>
-          <button class="btn-ghost" data-reveal="analogy" data-src="analogy">${esc(L.reveal)}</button>
-        </div>
-        <div class="model" id="model-analogy">
-          <div class="lock">🔒 ${esc(L.locked)}</div>
-          <div class="body"><div class="tag">${esc(L.modelTag)}</div><div class="prose">${paras(f.modelAnalogy)}</div></div>
-        </div>
+        ${mcqHTML('analogy')}
         <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" data-next data-gate="analogy">${esc(L.next)}</button></div>
       </section>
-      <!-- 6 recall -->
+      <!-- 6 recall — flashcards (kept) + transfer MCQ -->
       <section class="stage" data-stage="6" role="tabpanel" id="panel-6" aria-labelledby="tab-6">
         <h2 tabindex="-1">${esc(L.s5t)}</h2><p class="lead">${esc(L.s5l)}</p>
         <div class="fcbar"><button class="btn-ghost fcbtn" id="fcFilter">${esc(L.fconly)}</button><span id="fcLeft"></span></div>
         <div id="cards"></div>
         <div class="challenge">
-          <h2 tabindex="-1">${esc(L.challenge)}</h2>
-          <div class="scenario">${esc(f.teachBackPrompt)}</div>
-          <textarea id="teach" placeholder="${esc(L.s2ph)}" aria-label="${esc(L.challenge)}"></textarea>
-          <div class="row"><button class="btn-ghost" data-copy="teachBack" data-src="teach">${esc(L.copy)}</button></div>
+          <h2 tabindex="-1">${esc(L.transT)}</h2><p class="lead">${esc(L.transL)}</p>
+          ${mcqHTML('transfer')}
         </div>
         <div class="done-banner">${esc(L.donemsg)}</div>
-        <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" id="doneBtn">${esc(L.done)}</button></div>
+        <div class="nav"><button class="btn-ghost" data-back>${esc(L.back)}</button><button class="btn-primary" id="doneBtn" data-gate="transfer">${esc(L.done)}</button></div>
       </section>
     </div>
     <div class="kbd-hint">${L.kbdhint}</div>
     <div class="progress-note">${esc(L.note)}</div>
   </div>`;
 
-function gapHTML(g){
-  return `<div class="gap" data-gap="${esc(g.id)}">
-    <div class="q">${esc(g.prompt)}</div>
-    <div class="marks" role="group" aria-label="${esc(g.prompt)}">
-      <button type="button" class="mark" data-v="solid" aria-pressed="false">${esc(L.solid)}</button>
-      <button type="button" class="mark" data-v="shaky" aria-pressed="false">${esc(L.sh)}</button>
-      <button type="button" class="mark" data-v="cant" aria-pressed="false">${esc(L.cant)}</button>
+/* ---- render one MCQ set into its stage container + a progress meter ---- */
+function mcqHTML(key){
+  const set = MCQ_SETS.find(s=>s.key===key);
+  const qs = set ? set.data : [];
+  return `<div class="mcq" id="mcq-${key}" data-set="${key}">${qs.map(renderMCQ).join("")}</div>`
+       + `<div class="meter" id="meter-${key}" aria-live="polite"></div>`;
+}
+
+/* ---- render one MCQ (one card per question; options are real radios) ---- */
+function renderMCQ(q){
+  return `<div class="mcq-q" data-mcq="${esc(q.id)}" data-correct="${q.correct}">
+    <div class="q">${esc(q.stem)}</div>
+    <div class="opts" role="radiogroup" aria-label="${esc(q.stem)}">
+      ${(q.options||[]).map((o,oi)=>`<button type="button" class="opt" role="radio" aria-checked="false" data-oi="${oi}">${esc(o)}</button>`).join("")}
     </div>
-    <div class="redo"><div class="cap">${esc(L.redocap)}</div><textarea placeholder="${esc(L.redoph)}" aria-label="${esc(L.redocap)}"></textarea></div>
+    <div class="mcq-fb" aria-live="polite"></div>
   </div>`;
 }
 
@@ -491,6 +419,7 @@ document.addEventListener('keydown', e=>{
   if(e.metaKey||e.ctrlKey||e.altKey) return;
   const tag = (e.target.tagName||"").toLowerCase();
   if(tag==='textarea' || tag==='input') return;
+  if(e.target.closest && e.target.closest('.opts')) return;  // arrows inside an MCQ option group must not jump stages
   if(e.key==='ArrowRight'){
     const nextBtn = document.querySelector('.stage[data-stage="'+state.currentStage+'"] [data-next]');
     if(nextBtn && !nextBtn.disabled){ e.preventDefault(); showStage(state.currentStage+1, true); }
@@ -499,86 +428,55 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-// gate: can the learner advance from this stage?
-function gatePasses(name){
-  if(name==='predict') return canReveal(state.predictText);
-  if(name==='explain') return canReveal(state.explainText);
-  if(name==='analogy') return canReveal(state.analogyText);
-  if(name==='gaps') return f.gapChecklist.every(g=> state.gapMarks[g.id]);
-  return true;
+// gate: every question in a stage's MCQ set must be ANSWERED (not necessarily correct) to advance.
+//   The instant per-question "why" already teaches a wrong pick; gating on correctness would trap
+//   a learner who just read the right rationale and invite blind option-cycling.
+function gatePasses(setKey){
+  const set = MCQ_SETS.find(s=>s.key===setKey);
+  if(!set) return true;
+  return set.data.every(q=> state.mcqAnswers[q.id]!==undefined);
 }
 function refreshGates(){
   document.querySelectorAll('[data-gate]').forEach(b=> b.disabled = !gatePasses(b.dataset.gate));
-  document.querySelectorAll('[data-reveal]').forEach(b=>{
-    const src=document.getElementById(b.dataset.src); const key=b.dataset.reveal;
-    if(state.revealed[key]) return; // already opened
-    b.disabled = !canReveal(src ? src.value : "");
-  });
 }
 
-// reveal buttons
-document.querySelectorAll('[data-reveal]').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    const key=b.dataset.reveal; const src=document.getElementById(b.dataset.src);
-    if(!canReveal(src?src.value:"")) return;
-    document.getElementById('model-'+key).classList.add('open');
-    b.disabled = true; state.revealed[key]=true; save();
+/* ---- MCQ engine: ONE delegated handler for every stage; instant feedback; locks on first answer ---- */
+function paintMCQ(qEl){
+  const id = qEl.dataset.mcq;
+  const correct = +qEl.dataset.correct;
+  const chosen = state.mcqAnswers[id];
+  const answered = chosen !== undefined;
+  const q = Q_BY_ID[id];
+  const fb = qEl.querySelector('.mcq-fb');
+  qEl.querySelectorAll('.opt').forEach(btn=>{
+    const oi = +btn.dataset.oi;
+    btn.disabled = answered;                                   // lock after first answer
+    btn.classList.toggle('correct', answered && oi===correct);
+    btn.classList.toggle('wrong',   answered && oi===chosen && chosen!==correct);
+    btn.setAttribute('aria-checked', String(oi===chosen));
   });
-});
-
-// copy grading buttons
-document.querySelectorAll('[data-copy]').forEach(b=>{
-  b.addEventListener('click', ()=>{ const src=document.getElementById(b.dataset.src); copyGrade(b.dataset.copy, src?src.value:""); });
-});
-
-// predict textarea (NEW)
-const predict = document.getElementById('predict');
-predict.value = state.predictText;
-predict.addEventListener('input', ()=>{
-  state.predictText = predict.value;
-  document.getElementById('predictMeter').textContent = L.wc(wordCount(predict.value));
-  document.getElementById('predictHint').textContent = checkPrediction(predict.value);
-  refreshGates(); save();
-});
-
-// explain textarea
-const explain = document.getElementById('explain');
-explain.value = state.explainText;
-explain.addEventListener('input', ()=>{
-  state.explainText = explain.value;
-  document.getElementById('explainMeter').textContent = L.wc(wordCount(explain.value));
-  refreshGates(); save();
-});
-
-// analogy textarea
-const analogy = document.getElementById('analogy');
-analogy.value = state.analogyText;
-analogy.addEventListener('input', ()=>{
-  state.analogyText = analogy.value;
-  document.getElementById('analogyHint').textContent = checkAnalogy(analogy.value);
-  refreshGates(); save();
-});
-
-// teach-back textarea
-const teach = document.getElementById('teach');
-teach.value = state.teachBackText;
-teach.addEventListener('input', ()=>{ state.teachBackText = teach.value; save(); });
-
-// gap marks + redo boxes
-document.querySelectorAll('.gap').forEach(gp=>{
-  const id = gp.dataset.gap;
-  const redo = gp.querySelector('.redo'); const redoTa = redo.querySelector('textarea');
-  function paint(){
-    const v = state.gapMarks[id];
-    gp.querySelectorAll('.mark').forEach(m=> m.setAttribute('aria-pressed', m.dataset.v===v ? 'true':'false'));
-    redo.classList.toggle('show', v==='shaky' || v==='cant');
+  if(!answered){ fb.textContent=''; fb.className='mcq-fb'; return; }
+  if(chosen===correct){ fb.textContent = L.mcqCorrect+(q&&q.whyCorrect ? ' — '+q.whyCorrect : ''); fb.className='mcq-fb good'; }
+  else {
+    const w = (q && q.whyWrong && q.whyWrong[chosen]) || L.mcqWrongGeneric;
+    fb.textContent = L.mcqWrong+' — '+w; fb.className='mcq-fb bad';
   }
-  gp.querySelectorAll('.mark').forEach(m=>{
-    m.addEventListener('click', ()=>{ state.gapMarks[id]=m.dataset.v; paint(); refreshGates(); save(); });
+}
+function updateMeters(){
+  MCQ_SETS.forEach(set=>{
+    const el = document.getElementById('meter-'+set.key); if(!el) return;
+    const total = set.data.length;
+    const ans = set.data.filter(q=> state.mcqAnswers[q.id]!==undefined).length;
+    el.textContent = total ? L.mcqProgress(ans, total) : '';
   });
-  redoTa.value = state.gapNotes[id]||"";
-  redoTa.addEventListener('input', ()=>{ state.gapNotes[id]=redoTa.value; save(); });
-  paint();
+}
+// one click handler covers every MCQ on the page (stages 1,3,4,5,6). Flashcard clicks aren't .opt → ignored.
+document.querySelector('.card').addEventListener('click', e=>{
+  const opt = e.target.closest('.opt'); if(!opt) return;
+  const qEl = opt.closest('.mcq-q'); const id = qEl.dataset.mcq;
+  if(state.mcqAnswers[id] !== undefined) return;   // first answer only — commit, then see the rationale
+  state.mcqAnswers[id] = +opt.dataset.oi;
+  paintMCQ(qEl); updateMeters(); refreshGates(); save();
 });
 
 // flashcards
@@ -608,13 +506,9 @@ document.getElementById('doneBtn').addEventListener('click', ()=>{
   state.done = true; document.querySelector('.stage[data-stage="6"]').classList.add('done'); save(); toast(L.donemsg);
 });
 
-/* ---- rehydrate reveals + done + resume stage ---- */
-Object.keys(state.revealed).forEach(k=>{ if(state.revealed[k]){ const m=document.getElementById('model-'+k); if(m) m.classList.add('open'); } });
+/* ---- rehydrate MCQ answers + done + resume stage ---- */
 if(state.done) document.querySelector('.stage[data-stage="6"]').classList.add('done');
-document.getElementById('predictMeter').textContent = L.wc(wordCount(state.predictText));
-document.getElementById('predictHint').textContent = checkPrediction(state.predictText);
-document.getElementById('explainMeter').textContent = L.wc(wordCount(state.explainText));
-document.getElementById('analogyHint').textContent = checkAnalogy(state.analogyText);
+document.querySelectorAll('.mcq-q').forEach(paintMCQ); updateMeters();
 showStage(state.currentStage||0, false);
 </script>
 </body>
